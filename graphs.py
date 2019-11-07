@@ -3,7 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import os
 import logging
-
+plt.rcParams["figure.figsize"] = (15,15)
 logging.basicConfig(format="%(message)s",level=logging.INFO)
 logger = logging.getLogger('root')
 
@@ -198,18 +198,7 @@ class MinimumSpanningTree():
                 condition = all(my_cycle.dfs().values())   #jeśli wszystkie wierzchołi są już w drzewie to sprawdzamy spójność
         print(self.minimum_tree_edges)
         w_sum = sum([weight for *args, weight in self.minimum_tree_edges])
-        return Graph(self.minimum_tree_edges), w_sum
-
-
-
-
-
-
-
-
-
-
-
+        return Graph(self.minimum_tree_edges), w_sum, self.minimum_tree_edges
 
 '''
 Draw graph with labels
@@ -235,7 +224,7 @@ g = Graph(edges)
 
 
 tree = MinimumSpanningTree(g)
-g, weight_sum = tree.generate_min_tree()
+z, weight_sum, tree_edges = tree.generate_min_tree()
 print(weight_sum)
 
 
@@ -245,15 +234,22 @@ edge_list_dict = g.convert_edges_list_to_dict_one_way()
 
 A = np.matrix(adjacency_matrix)
 G = nx.from_numpy_matrix(A)
+
 pos = nx.spring_layout(G)
 
 '''green color for cycle vertex'''
 
-nx.draw(G, pos, with_labels=True, node_color='orange', edge_color='blue')
+tree_edges = [(int(f[-1]), int(t[-1])) for f, t, *args in tree_edges]
+
+
+
+nx.draw(G, pos, with_labels=True, node_color='orange', edge_color='green')
 nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_list_dict_both_way)
+nx.draw_networkx_edges(G, pos, edgelist=tree_edges, edge_color='r', width=2)
 plt.axis('off')
+
 plt.savefig("graph", format="png")
-plt.figtext(.5, .9, f"Spannig Tree weight sum = {weight_sum}")
+plt.figtext(.5, .9, f"Spanning Tree weight sum = {weight_sum}", color='r')
 plt.show()
 
 if 'graph.jpg' in os.listdir():
