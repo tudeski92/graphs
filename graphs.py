@@ -16,7 +16,6 @@ class Graph:
             temp.append(from_vertex)
             temp.append(to_vertex)
         self.Vlist = list(set(temp))
-        self.number = len(list(temp))
         self.numbers = [int(vertex[-1]) for vertex in temp]
         self.Elist = edges
         self.Elist_dict_bothway = {} #needed for labeling
@@ -27,6 +26,9 @@ class Graph:
             for j in range(max(self.numbers)+1):
                 row.append(0)
             self.adjacency.append(row)
+        self.create_adjacency_matrix()
+        self.convert_edges_list_to_dict_one_way()
+        self.convert_edges_list_to_dict()
 
 
     def add_vertex(self):
@@ -40,12 +42,6 @@ class Graph:
             self.adjacency[int(from_vertex[-1])][int(to_vertex[-1])] = 1
             self.adjacency[int(to_vertex[-1])][int(from_vertex[-1])] = 1
         return self.adjacency
-
-    def get_edges(self):
-        return self.Elist
-
-    def get_vertex(self):
-        return self.Vlist
 
     def convert_edges_list_to_dict(self):
         for edge in self.Elist:
@@ -173,7 +169,6 @@ class MinimumSpanningTree():
 
     def generate_min_tree(self):
         self.sort_edges_in_weight_order()
-        wag_sum = 0
         checked_vertex = set()
         condition = False
         while not condition:
@@ -181,9 +176,6 @@ class MinimumSpanningTree():
             from_vertex, to_vertex, weight = edge
             self.minimum_tree_edges.append(edge)
             g = Graph(self.minimum_tree_edges)
-            g.create_adjacency_matrix()
-            g.convert_edges_list_to_dict()
-            g.convert_edges_list_to_dict_one_way()
             cycle = Cycle(g)
             if cycle.cycle_check():
                 self.minimum_tree_edges.remove(edge)
@@ -191,11 +183,8 @@ class MinimumSpanningTree():
             checked_vertex.add(to_vertex)
             if len(list(checked_vertex)) == len(self.vertex_list):
                 my_graph = Graph(self.minimum_tree_edges)
-                my_graph.create_adjacency_matrix()
-                my_graph.convert_edges_list_to_dict()
-                my_graph.convert_edges_list_to_dict_one_way()
                 my_cycle = Cycle(my_graph)
-                condition = all(my_cycle.dfs().values())   #jeśli wszystkie wierzchołi są już w drzewie to sprawdzamy spójność
+                condition = all(my_cycle.dfs().values())   #jeśli wszystkie wierzchołi są już w drzewie to sprawdzamy spójność algorytmem dfs
         print(self.minimum_tree_edges)
         w_sum = sum([weight for *args, weight in self.minimum_tree_edges])
         return Graph(self.minimum_tree_edges), w_sum, self.minimum_tree_edges
@@ -204,57 +193,55 @@ class MinimumSpanningTree():
 Draw graph with labels
 '''
 
-edges = ([('v0', 'v1', 5),
-        ('v1', 'v2', 9),
-        ('v2', 'v7', 3),
-        ('v6', 'v7', 9),
-        ('v6', 'v5', 6),
-        ('v0', 'v3', 9),
-        ('v1', 'v4', 8),
-          ('v6', 'v4', 1),
-          ('v2', 'v6', 5),
-          ('v2', 'v4', 4),
-          ('v2', 'v3', 9),
-          ('v7', 'v1', 7),
-          ('v0', 'v6', 3),
-          ('v1', 'v5', 6),
-          ('v3', 'v6', 1),
-          ('v5', 'v4', 1)])
+# edges = ([('v0', 'v1', 5),
+#         ('v1', 'v2', 9),
+#         ('v2', 'v7', 3),
+#         ('v6', 'v7', 9),
+#         ('v6', 'v5', 6),
+#         ('v0', 'v3', 9),
+#         ('v1', 'v4', 8),
+#           ('v6', 'v4', 1),
+#           ('v2', 'v6', 5),
+#           ('v2', 'v4', 4),
+#           ('v2', 'v3', 9),
+#           ('v7', 'v1', 7),
+#           ('v0', 'v6', 3),
+#           ('v1', 'v5', 6),
+#           ('v3', 'v6', 1),
+#           ('v5', 'v4', 1)])
+edges = ([('v0', 'v1', 4),
+          ('v1', 'v2', 2),
+          ('v2', 'v3', 8),
+          ('v3', 'v4', 6),
+          ('v4', 'v0', 2),
+          ('v0', 'v5', 1),
+          ('v1', 'v5', 2),
+          ('v4', 'v5', 7),
+          ('v3', 'v5', 3)])
+
 g = Graph(edges)
+def generate_plot(g: Graph, min_span_tree = False):
+    A = np.matrix(g.adjacency)
+    G = nx.from_numpy_matrix(A)
+    pos = nx.spring_layout(G)
+    nx.draw(G, pos, with_labels=True, node_color='orange', edge_color='green')
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=g.convert_edges_list_to_dict())
+    if min_span_tree:
+        tree = MinimumSpanningTree(g)
+        z, weight_sum, tree_edges = tree.generate_min_tree()
+        tree_edges = [(int(f[-1]), int(t[-1])) for f, t, *args in tree_edges]
+        nx.draw_networkx_edges(G, pos, edgelist=tree_edges, edge_color='r', width=2)
+    plt.axis('off')
+    # plt.figtext(.5, .9, f"Spanning Tree weight sum = {weight_sum}", color='r')
+    os.remove("static/images/graph") if "graph" in os.listdir("static/images") else None
+    os.remove("static/images/graph.jpg") if 'graph.jpg' in os.listdir("static/images") else None
+    plt.savefig("static/images/graph", format="png")
+    os.chdir("static/images")
+    os.rename('graph', 'graph.jpg')
+    plt.show()
 
 
-tree = MinimumSpanningTree(g)
-z, weight_sum, tree_edges = tree.generate_min_tree()
-print(weight_sum)
-
-
-adjacency_matrix = g.create_adjacency_matrix()
-edge_list_dict_both_way = g.convert_edges_list_to_dict()
-edge_list_dict = g.convert_edges_list_to_dict_one_way()
-
-A = np.matrix(adjacency_matrix)
-G = nx.from_numpy_matrix(A)
-
-pos = nx.spring_layout(G)
-
-'''green color for cycle vertex'''
-
-tree_edges = [(int(f[-1]), int(t[-1])) for f, t, *args in tree_edges]
-
-
-
-nx.draw(G, pos, with_labels=True, node_color='orange', edge_color='green')
-nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_list_dict_both_way)
-nx.draw_networkx_edges(G, pos, edgelist=tree_edges, edge_color='r', width=2)
-plt.axis('off')
-
-plt.savefig("graph", format="png")
-plt.figtext(.5, .9, f"Spanning Tree weight sum = {weight_sum}", color='r')
-plt.show()
-
-if 'graph.jpg' in os.listdir():
-    os.remove('graph.jpg')
-os.rename('graph', 'graph.jpg')
+generate_plot(g, min_span_tree=True)
 
 
 
