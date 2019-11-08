@@ -83,6 +83,9 @@ class Stack:
     def remove_element(self, element):
         self.stack.remove(element)
 
+    def clear_stack(self):
+        self.stack.clear()
+
     def __str__(self):
         return str(self.stack)
 
@@ -112,6 +115,7 @@ class Cycle:
         current_vertex = self.vertexes_list[0]
         visited = dict([key, False] for key in self.vertexes_list)
         stack = Stack()
+        stack.clear_stack()
         stack.push(current_vertex)
         visited[current_vertex] = True
         while not stack.empty():
@@ -126,10 +130,12 @@ class Cycle:
         return visited
 
     def cycle_check(self):
+
         self.get_all_vertex_nbr()
         current_vertex = self.vertexes_list[0]
         visited = dict([key, False] for key in self.vertexes_list)
         stack = Stack()
+        stack.clear_stack()
         stack.push(current_vertex)
         stack.push(-1)
         visited[current_vertex] = True
@@ -219,26 +225,36 @@ edges = ([('v0', 'v1', 4),
           ('v4', 'v5', 7),
           ('v3', 'v5', 3)])
 
+# edges = ([('v0', 'v1', 4),
+#           ('v1', 'v2', 2),
+#           ('v2', 'v3', 20),
+#           ('v1', 'v4', 3),
+#           ('v1', 'v5', 10),
+#           ('v4', 'v5', 6)])
+
 g = Graph(edges)
-def generate_plot(g: Graph, min_span_tree = False):
+
+
+def generate_plot(g: Graph, min_span_tree=False):
+    weight_sum = None
     A = np.matrix(g.adjacency)
     G = nx.from_numpy_matrix(A)
     pos = nx.spring_layout(G)
-    nx.draw(G, pos, with_labels=True, node_color='orange', edge_color='green')
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=g.convert_edges_list_to_dict())
+    nx.draw(G, pos, with_labels=True, node_color='orange', edge_color='green', font_size=20, node_size=400)
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=g.convert_edges_list_to_dict(), font_size=20)
     if min_span_tree:
         tree = MinimumSpanningTree(g)
         z, weight_sum, tree_edges = tree.generate_min_tree()
         tree_edges = [(int(f[-1]), int(t[-1])) for f, t, *args in tree_edges]
         nx.draw_networkx_edges(G, pos, edgelist=tree_edges, edge_color='r', width=2)
     plt.axis('off')
-    # plt.figtext(.5, .9, f"Spanning Tree weight sum = {weight_sum}", color='r')
     os.remove("static/images/graph") if "graph" in os.listdir("static/images") else None
     os.remove("static/images/graph.jpg") if 'graph.jpg' in os.listdir("static/images") else None
     plt.savefig("static/images/graph", format="png")
     os.chdir("static/images")
     os.rename('graph', 'graph.jpg')
-    plt.show()
+    return weight_sum
+    # plt.show()
 
 
 generate_plot(g, min_span_tree=True)
