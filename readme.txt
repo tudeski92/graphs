@@ -1,2 +1,2 @@
-Script is searching minimum spanning tree in specified graph
-and displaying it in browser with flask
+graph.py script is searching for minimum spanning tree in specified graph
+and displaying it in browser using flask
